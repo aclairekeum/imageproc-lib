@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2008-2012, Regents of the University of California
+/*
+ * Copyright (c) 2010, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +27,70 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * System Time Module
+ * InvenSense MPU-6050 6-axis MEMS Driver
  *
- * by Stanley S. Baek and Humphrey Hu
+ * by Humphrey Hu
+ * based on ITG-3200 Driver by Stanley S. Baek
  *
- * v.0.2
+ * Notes:
+ *  - Uses an I2C port for communicating with the mpuscope chip
  *
  * Usage:
- *   #include "sclock.h"
- *   #include "utils.h"
+ *  #include  "mpu.h"
  *
- *   unsigned long time_elapsed;
+ *  float mpuData[3];
+ *  unsigned char * mpuStrData;
  *
- *   // initialize system time module
- *   sclockSetup();
+ *  // initialize mpu module
+ *  mpuSetup();
+ * 
+ *  // run calibration with 1000 samples
+ *  mpuRunCalib(1000)
  *
- *   // delay for .5 sec
- *   delay_us(500);
+ *  // read out data from mpuscope and save in an internal buffer
+ *  mpuReadXYZ();
  *
- *   time_elapsed = sclockGetTime();
- *   // time_elapsed should hold a value of ~500.
+ *  // convert data into floating point values in deg/s
+ *  mpuGetDegXYZ(mpuData);
+ *  // mpuGetRadXYZ(mpuData);  // in radian/s  
+ *
+ *  // read the data in raw string format
+ *  // mpuStrData[0] = lower byte of x-axis data
+ *  // mpuStrData[1] = higher byte of x-axis data
+ *  // mpuStrData[2] = lower byte of y-axis data
+ *  // ...
+ *  // mpuStrData[5] = higher byte of z-axis data
+ *
+ *  mpuStrData = mpuGetsXYZ();
  */
 
-#ifndef __SCLOCK_H
-#define __SCLOCK_H
+#ifndef __MPU_H
+#define __MPU_H
+
+// Setup device
+void mpuSetup(void);
+
+// Run calibration routine
+void mpuRunCalib(unsigned int count);
+
+// Set sleep mode
+void mpuSetSleep(unsigned char mode);
+
+// 3 ints
+void mpuGetGyro(int* buff);
+// 3 ints
+void mpuGetXl(int* buff);
+// 1 int
+void mpuGetTemp(int* buff);
+
+float mpuGetGyroScale(void);
+float mpuGetXlScale(void);
+float mpuGetTempScale(void);
+
+// Read data from MPU
+void mpuUpdate(void);
+
+#endif
 
 
-// Handles initialization of required timers and resets time to 0.
-void sclockSetup(void);
 
-// Requests number of ticks since the clock was started.
-//
-// 5 ticks add up to a microsecond elapsed.
-//
-// Returns : clock ticks
-unsigned long sclockGetTicks(void);
-
-// Requests number of microseconds since the clock was started.
-//
-// Returns : time in microseconds
-unsigned long sclockGetTime(void);
-
-
-#endif //  __SCLOCK_H

@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2008-2012, Regents of the University of California
+/*
+ * Copyright (c) 2012, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +27,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * System Time Module
+ * Header for wrapper of UART read/write functionality with packet parsing
  *
- * by Stanley S. Baek and Humphrey Hu
+ * by Austin D. Buchan
  *
- * v.0.2
- *
- * Usage:
- *   #include "sclock.h"
- *   #include "utils.h"
- *
- *   unsigned long time_elapsed;
- *
- *   // initialize system time module
- *   sclockSetup();
- *
- *   // delay for .5 sec
- *   delay_us(500);
- *
- *   time_elapsed = sclockGetTime();
- *   // time_elapsed should hold a value of ~500.
+ * v.beta
  */
 
-#ifndef __SCLOCK_H
-#define __SCLOCK_H
+#include "uart.h"
+#include "payload.h"
+#include "mac_packet.h"
 
+#include <stdio.h>
 
-// Handles initialization of required timers and resets time to 0.
-void sclockSetup(void);
+#ifndef UART_H
+#define	UART_H
 
-// Requests number of ticks since the clock was started.
-//
-// 5 ticks add up to a microsecond elapsed.
-//
-// Returns : clock ticks
-unsigned long sclockGetTicks(void);
+#define UART_TX_IDLE        0xFF
+#define UART_TX_SEND_SIZE   0xFE
 
-// Requests number of microseconds since the clock was started.
-//
-// Returns : time in microseconds
-unsigned long sclockGetTime(void);
+#define UART_RX_IDLE        0xFF
+#define UART_RX_CHECK_SIZE  0xFE
 
+#define UART_MAX_SIZE 200
 
-#endif //  __SCLOCK_H
+typedef void (*packet_callback)(MacPacket);
+
+void uartInit(packet_callback rx_cb);
+void uartSend(unsigned char length,unsigned char *frame);
+void uartSendPayload(unsigned char type, unsigned char status, unsigned char length, unsigned char *frame);
+void uartSendPacket(MacPacket packet);
+
+#endif	/* UART_H */
+

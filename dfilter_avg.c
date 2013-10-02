@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2008-2012, Regents of the University of California
+/*
+ * Copyright (c) 2012, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +27,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * System Time Module
+ * Averaging filter using a circular buffer
  *
- * by Stanley S. Baek and Humphrey Hu
+ * by Andrew Pullin
  *
- * v.0.2
+ * v.0.1
  *
- * Usage:
- *   #include "sclock.h"
- *   #include "utils.h"
- *
- *   unsigned long time_elapsed;
- *
- *   // initialize system time module
- *   sclockSetup();
- *
- *   // delay for .5 sec
- *   delay_us(500);
- *
- *   time_elapsed = sclockGetTime();
- *   // time_elapsed should hold a value of ~500.
+ * Revisions:
+ *  Andrew Pullin   2012-5-28   Initial release.
  */
 
-#ifndef __SCLOCK_H
-#define __SCLOCK_H
+#include "dfilter_avg.h"
+#include <stdlib.h>
 
 
-// Handles initialization of required timers and resets time to 0.
-void sclockSetup(void);
+///////////////   Public functions  //////////////////
 
-// Requests number of ticks since the clock was started.
-//
-// 5 ticks add up to a microsecond elapsed.
-//
-// Returns : clock ticks
-unsigned long sclockGetTicks(void);
+void dfilterAvgCreate(dfilterAvgInt_t* filt, unsigned int length){
+    filt->data = calloc(length, sizeof(int)); //Initialize data to 0
+    filt->windowLen = length;
+    filt->index = 0;
+    filt->accum = 0;
+}
 
-// Requests number of microseconds since the clock was started.
-//
-// Returns : time in microseconds
-unsigned long sclockGetTime(void);
+void dfilterAvgUpdate(dfilterAvgInt_t* filt, int newval){
+    // Add new value to accumulation, subtract existing value that is
+    // going to be overwritten.
+    filt->accum += newval - filt->data[filt->index];
+    // Set new value
+    filt->data[filt->index] = newval;
+    // Circularly increment index
+    filt->index = (filt->index + 1) % filt->windowLen;
+}
 
+// TODO (apullin) : more efficient calculation? DSP? delta?
+int dfilterAvgCalc(dfilterAvgInt_t* filt){
+    return (int)(filt->accum / (filt->windowLen));
+}
 
-#endif //  __SCLOCK_H
+void dfilterZero(dfilterAvgInt_t* filt){
+    int i;
+    for(i = 0; i < filt->windowLen; i++){
+        filt->data[i] = 0;
+    }
+}

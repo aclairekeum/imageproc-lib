@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2008-2012, Regents of the University of California
+/*
+ * Copyright (c) 2012, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +27,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * System Time Module
+ * Hardware PID module
  *
- * by Stanley S. Baek and Humphrey Hu
+ * by Kevin Peterson
  *
- * v.0.2
- *
- * Usage:
- *   #include "sclock.h"
- *   #include "utils.h"
- *
- *   unsigned long time_elapsed;
- *
- *   // initialize system time module
- *   sclockSetup();
- *
- *   // delay for .5 sec
- *   delay_us(500);
- *
- *   time_elapsed = sclockGetTime();
- *   // time_elapsed should hold a value of ~500.
+ * v.0.1
  */
 
-#ifndef __SCLOCK_H
-#define __SCLOCK_H
+#ifndef __PID_HW_H
+#define __PID_HW_H
 
+#include <dsp.h>
+#include <libq.h>
 
-// Handles initialization of required timers and resets time to 0.
-void sclockSetup(void);
+void pidHWCreate(tPID* controller, fractional* abcCoefficients,
+                                   fractional* controlHistory);
+void pidHWSetFloatCoeffs(tPID* controller, float Kp, float Ki, float Kd);
+void pidHWSetFracCoeffs(tPID* controller, fractional Kp, fractional Ki,
+                                                         fractional Kd);
+void pidHWSetReference(tPID* controller, fractional reference);
+fractional pidHWRun(tPID* controller, fractional feedback);
 
-// Requests number of ticks since the clock was started.
-//
-// 5 ticks add up to a microsecond elapsed.
-//
-// Returns : clock ticks
-unsigned long sclockGetTicks(void);
-
-// Requests number of microseconds since the clock was started.
-//
-// Returns : time in microseconds
-unsigned long sclockGetTime(void);
-
-
-#endif //  __SCLOCK_H
+#endif //__PID_HW_H

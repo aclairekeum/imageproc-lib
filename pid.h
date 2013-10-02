@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2008-2012, Regents of the University of California
+/*
+ * Copyright (c) 2012, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +27,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * System Time Module
+ * Generalized integer PID module
  *
- * by Stanley S. Baek and Humphrey Hu
+ * by Andrew Pullin
  *
- * v.0.2
- *
- * Usage:
- *   #include "sclock.h"
- *   #include "utils.h"
- *
- *   unsigned long time_elapsed;
- *
- *   // initialize system time module
- *   sclockSetup();
- *
- *   // delay for .5 sec
- *   delay_us(500);
- *
- *   time_elapsed = sclockGetTime();
- *   // time_elapsed should hold a value of ~500.
+ * v.0.1
  */
 
-#ifndef __SCLOCK_H
-#define __SCLOCK_H
+#ifndef __PID_H
+#define __PID_H
 
+//DSP dependent include
+#ifdef PID_HARDWARE
+#include <dsp.h>
+#endif
 
-// Handles initialization of required timers and resets time to 0.
-void sclockSetup(void);
+#define PID_ON  1
+#define PID_OFF 0
 
-// Requests number of ticks since the clock was started.
-//
-// 5 ticks add up to a microsecond elapsed.
-//
-// Returns : clock ticks
-unsigned long sclockGetTicks(void);
+//Structures and enums
+//PID Continer structure
 
-// Requests number of microseconds since the clock was started.
-//
-// Returns : time in microseconds
-unsigned long sclockGetTime(void);
+typedef struct {
+    int input;
+    long dState, iState, preSat, p, i, d;
+    int Kp, Ki, Kd, Kaw, y_old, output;
+    unsigned char N;
+    char onoff; //boolean
+    long error;
+    unsigned long run_time;
+    unsigned long start_time;
+    int inputOffset;
+    int Kff;
+    int maxVal, minVal;
+    int satValPos, satValNeg;
+#ifdef PID_HARDWARE
+    tPID dspPID;
+#endif
+} pidObj;
 
+//Functions
+void pidUpdate(pidObj *pid, int y);
+void pidInitPIDObj(pidObj *pid, int Kp, int Ki, int Kd, int Kaw, int ff);
+void pidSetInput(pidObj *pid, int feedback);
+void pidSetGains(pidObj *pid, int Kp, int Ki, int Kd, int Kaw, int ff);
+void pidOnOff(pidObj *pid, unsigned char state);
 
-#endif //  __SCLOCK_H
+#endif // __PID_H

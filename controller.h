@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2008-2012, Regents of the University of California
+/*
+ * Copyright (c) 2009 - 2010, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,46 +27,49 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * System Time Module
+ * Control block module
  *
- * by Stanley S. Baek and Humphrey Hu
+ * by Stanley S. Baek
  *
- * v.0.2
- *
- * Usage:
- *   #include "sclock.h"
- *   #include "utils.h"
- *
- *   unsigned long time_elapsed;
- *
- *   // initialize system time module
- *   sclockSetup();
- *
- *   // delay for .5 sec
- *   delay_us(500);
- *
- *   time_elapsed = sclockGetTime();
- *   // time_elapsed should hold a value of ~500.
+ * v.beta
  */
 
-#ifndef __SCLOCK_H
-#define __SCLOCK_H
+#ifndef __CONTROLLER_H
+#define __CONTROLLER_H
 
 
-// Handles initialization of required timers and resets time to 0.
-void sclockSetup(void);
+#include "dfilter.h"
 
-// Requests number of ticks since the clock was started.
-//
-// 5 ticks add up to a microsecond elapsed.
-//
-// Returns : clock ticks
-unsigned long sclockGetTicks(void);
+typedef struct {
+    char running;
+    float ref;
+    float offset;
+    float ts;   // sampling interval
+    float kp;   // proportional control gain 
+    float ki;   // integral control gain in discrete time (= cont. time gain * ts)
+    float kd;   // derivative control gain in discrete time (= cont. time gain / ts)
+    float beta; // reference weight for proportional control
+    float gamma; // reference weight for derivative control
+    float umax;
+    float umin;
+    float iold;
+    float derrold;
+} CtrlPidParamStruct;
 
-// Requests number of microseconds since the clock was started.
-//
-// Returns : time in microseconds
-unsigned long sclockGetTime(void);
+typedef CtrlPidParamStruct* CtrlPidParam;
+
+float ctrlGetRef(CtrlPidParam pid);
+void ctrlSetRef(CtrlPidParam pid, float ref);
+float ctrlRunPid(CtrlPidParam pid, float y, DigitalFilter lpf); 
+CtrlPidParam ctrlCreatePidParams(float ts);
+void ctrlSetPidParams(CtrlPidParam pid, float ref, float kp, float ki, float kd);
+void ctrlSetPidOffset(CtrlPidParam pid, float offset);
+float ctrlGetPidOffset(CtrlPidParam pid);
+void ctrlSetRefWeigts(CtrlPidParam pid, float beta, float gamma);
+void ctrlSetSaturation(CtrlPidParam pid, float max, float min);
+unsigned char ctrlIsRunning(CtrlPidParam pid);
+void ctrlStart(CtrlPidParam pid);
+void ctrlStop(CtrlPidParam pid);
 
 
-#endif //  __SCLOCK_H
+#endif  // __CONTROLLER_H
