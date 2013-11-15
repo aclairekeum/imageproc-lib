@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, Regents of the University of California
+ * Copyright (c) 2010, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * Payload module
+ * Payload
  *
  * by Stanley S. Baek
  *
  * v.beta
  *
  * Revisions:
- *  Stanley S. Baek     2010-06-05    Initial release
+ *  Stanley S. Baek      2010-06-05    Initial release
+ *                      
+ * Notes:
  */
 
 #include "payload.h"
 #include "utils.h"
 #include <stdlib.h>     // for malloc
 #include <stdarg.h>     // variable number of arguments
-#include <string.h>     // for memcpy
 
 #define STATUS_POS              0
 #define TYPE_POS                1
@@ -57,20 +58,17 @@ Payload payCreate(unsigned char data_length, unsigned char *data,
 }
 
 
-Payload payCreateEmpty(unsigned char data_length)
-{
+Payload payCreateEmpty(unsigned char data_length){
     Payload pld = (Payload)malloc(sizeof(PayloadStruct));
-
-    if ( pld == NULL ) return NULL;
-
+	if(pld == NULL) {
+		return NULL;
+	}
+    
     unsigned char* data = (unsigned char*)malloc(data_length + PAYLOAD_HEADER_LENGTH);
-
-    if ( data == NULL )
-    {
-      free(pld);
-      return NULL;
-    }
-
+	if(data == NULL) {
+		free(pld);
+		return NULL;
+	}
     pld->pld_data = data;
     pld->data_length = data_length;
     pld->iter_index = 0;
@@ -101,13 +99,13 @@ unsigned char* payToString(Payload pld) {
     return pld->pld_data;
 }
 
-void payAppendData(Payload pld, char loc,
-                unsigned char data_length, unsigned char *data)
-{
-    memcpy(pld->pld_data + PAYLOAD_HEADER_LENGTH + loc, data, data_length);
 
-    // TODO (apullin) : Shouldn't iter_index keep track of "loc"?
-    pld->iter_index += data_length;
+void payAppendData(Payload pld, char loc, 
+                unsigned char data_length, unsigned char *data) {
+    while(data_length--) {
+        pld->pld_data[PAYLOAD_HEADER_LENGTH + loc++] = *(data++);
+    }
+
 }
 
 void payWriteByte(Payload pld, unsigned char loc, unsigned char data) {
@@ -154,3 +152,10 @@ void payDelete(Payload pld) {
     free(pld->pld_data);
     free(pld);
 }
+
+
+
+
+
+
+

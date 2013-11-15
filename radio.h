@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2013, Regents of the University of California
+ * Copyright (c) 2011-2012, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,20 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * High Level Wireless Communications Driver
+ * Radio with DMA Functionality Header File
  *
  * by Humphrey Hu
  *
- * v.0.5
+ * v. 0.4
  */
 
 #ifndef __RADIO_H
 #define __RADIO_H
 
 #include "mac_packet.h"
-
-#define RADIO_DATA_SAFE 0
-#define RADIO_LOCK_SAFE 1
+#include "payload.h"
 
 // Radio interrupt flags
 typedef enum {
@@ -64,59 +62,30 @@ typedef enum {
     STATE_TX_BUSY,          // Radio in TX mode, transmitting or preparing
 } RadioState;
 
-typedef struct {
-    unsigned int address;   // (2)
-    unsigned int pan_id;    // (2)
-    unsigned char channel;  // (1)
-} RadioAddress;             // Total: (5)
-
-typedef struct {
-    RadioAddress address;           // (5)
-    unsigned char soft_retries;     // (1)
-    unsigned char hard_retries;     // (1)
-    unsigned char watchdog_running; // (1)
-    unsigned long watchdog_timeout; // (4)
-} RadioConfiguration;               // Total: (12)
-
-typedef struct {
-    RadioState state;               // (2)
-    unsigned int packets_sent;      // (2)
-    unsigned int packets_received;  // (2)
-    unsigned char sequence_number;  // (1)
-    unsigned char retry_number;     // (1)
-    unsigned char last_rssi;        // (1)
-    unsigned char last_ed;          // (1)
-    unsigned long last_calibration; // (4)
-    unsigned long last_progress;    // (4)
-} RadioStatus;                      // Total: (18)
-
 // Setup and initialization
 void radioInit(unsigned int tx_queue_length, unsigned int rx_queue_length);
 
 // Configuration methods
-void radioConfigure(RadioConfiguration *conf);
-void radioSetAddress(RadioAddress *address);
 void radioSetSrcAddr(unsigned int src_addr);
+unsigned int radioGetSrcAddr(void);
 void radioSetSrcPanID(unsigned int src_pan_id);
+unsigned int radioGetPanID(void);
 void radioSetChannel(unsigned char channel);
-void radioSetSoftRetries(unsigned char retries);
-void radioSetHardRetries(unsigned char retries);
+unsigned char radioGetChannel(void);
+void radioSetRetries(unsigned char retries);
+unsigned char radioGetRetries(void);
 
-void radioGetConfiguration(RadioConfiguration *conf);
-void radioGetStatus(RadioStatus *status);
+// Radio no longer uses fixed destination addresses
+// See mac packet address set and packet creation methods
+
+RadioState radioGetState(void); // For debug..
 
 void radioSetWatchdogState(unsigned char state);
-void radioEnableWatchdog(void);
-void radioDisableWatchdog(void);
 void radioSetWatchdogTime(unsigned int time);
 
 // Queue interface
 unsigned int radioEnqueueTxPacket(MacPacket packet);
 MacPacket radioDequeueRxPacket(void);
-
-unsigned char radioSendData (unsigned int dest_addr, unsigned char status,
-                             unsigned char type, unsigned int datalen,
-                             unsigned char* dataptr, unsigned char fast_fail);
 
 unsigned int radioTxQueueEmpty(void);
 unsigned int radioTxQueueFull(void);
@@ -136,8 +105,9 @@ void radioProcess(void);
 MacPacket radioRequestPacket(unsigned int data_size);
 // Return a packet + payload to the preinitialized pool
 unsigned int radioReturnPacket(MacPacket packet);
-
-MacPacket __attribute__ ((deprecated)) radioCreatePacket(unsigned int data_size);
-void __attribute__ ((deprecated)) radioDeletePacket(MacPacket packet);
+// Create a packet + payload (Scheduled for deprecation)
+MacPacket radioCreatePacket(unsigned int data_size);
+// Delete a created packet + payload (Scheduled for deprecation)
+void radioDeletePacket(MacPacket packet);
 
 #endif // __RADIO_H

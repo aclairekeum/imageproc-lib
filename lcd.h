@@ -76,7 +76,7 @@
 * Return Value  : None                                                     
 *****************************************************************************/
 void lcdSetup(unsigned char rows, unsigned char cols); 
-
+static void lcdReset(void) ;
 
 /*****************************************************************************
 * Function Name : lcdSendString

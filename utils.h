@@ -53,10 +53,37 @@
     #define LED_2   _LATF1
 
 #elif defined(__IMAGEPROC2) || defined(__MIKRO)
-
+    //A port is not output
+    #define LED_a1   _LATA0
+    #define LED_a2   _LATA1
+    #define LED_a3   _LATA2
+    #define LED_a4   _LATA3
+    //B is output
     #define LED_1   _LATB12
     #define LED_2   _LATB13
     #define LED_3   _LATB14
+    #define LED_4   _LATB15 //ADDED TO TEST
+    //C is not output
+    #define LED_c1   _LATC1
+    #define LED_c2   _LATC2
+    #define LED_c3   _LATC3
+    #define LED_c4   _LATC4
+    //D port is not output 
+    #define LED_d1   _LATD0
+    #define LED_d2   _LATD1
+    #define LED_d3   _LATD2
+    #define LED_d4   _LATD3
+    //E port is for output of MIC 
+    #define LED_e1   _LATE4
+    #define LED_e2   _LATE5
+    #define LED_e3   _LATE6
+    #define LED_e4   _LATE7
+    //F port is not output
+    #define LED_f1   _LATF4
+    #define LED_f2   _LATF5
+    #define LED_f3   _LATF6
+    #define LED_f4   _LATF7
+    
 
 #elif defined(__BASESTATION) || defined(__BASESTATION2)
 

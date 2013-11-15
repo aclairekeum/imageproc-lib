@@ -31,12 +31,11 @@
  *
  * by Stanley S. Baek and Humphrey Hu
  *
- * v.0.2
+ * v.0.1
  *
  * Revisions:
- *  Stanley S. Baek             2010-06-16      Initial release
- *  Humphrey Hu                 2012-02-20      Restructured module as sclock
- *  Fernando L. Garcia Bermudez 2012-11-05      Simplified API
+ *  Stanley S. Baek     2010-06-16      Initial release
+ *  Humphrey Hu         2012-02-20      Restructuring module as sclock.
  *
  * Notes:
  *  - This module requires Timer 8 and 9 for setting up a 32-bit timer.
@@ -45,9 +44,9 @@
 #include "timer.h"
 #include "sclock.h"
 
-#define TMR_MSW     (TMR9HLD)
-#define TMR_LSW     (TMR8)
-#define TIME_FACTOR (5)
+#define TMR_MSW         (TMR9HLD)
+#define TMR_LSW         (TMR8)
+#define MILLIS_FACTOR   (625)
 
 // Time is represented by a 32-bit number
 typedef union {
@@ -58,12 +57,14 @@ typedef union {
     } half;
 } Time;
 
+// =========== Private Variables ==============================================
+
+static Time sclock_offset;
 
 // =========== Private Function Prototypes ====================================
 
 static void sclockSetupPeripheral(void);
 static void sclockReset(void);
-
 
 // =========== Public Functions ===============================================
 
@@ -74,7 +75,22 @@ void sclockSetup(void) {
 
 }
 
-unsigned long sclockGetTicks(void) {
+unsigned long sclockGetGlobalTicks(void) {
+
+    Time time;
+    time.half.lsw = TMR_LSW;
+    time.half.msw = TMR_MSW;
+    return time.time + sclock_offset.time;
+
+}
+
+unsigned long sclockGetGlobalMillis(void) {
+
+    return sclockGetGlobalTicks()/MILLIS_FACTOR;
+
+}
+
+unsigned long sclockGetLocalTicks(void) {
 
     Time time;
     time.half.lsw = TMR_LSW;
@@ -83,9 +99,39 @@ unsigned long sclockGetTicks(void) {
 
 }
 
-unsigned long sclockGetTime(void) {
+unsigned long sclockGetLocalMillis(void) {
 
-    return sclockGetTicks()/TIME_FACTOR;
+    return sclockGetLocalTicks()/MILLIS_FACTOR;
+
+}
+
+unsigned long sclockGetOffsetTicks(void) {
+
+    return sclock_offset.time;
+
+}
+
+unsigned long sclockGetOffsetMillis(void) {
+
+    return sclockGetOffsetTicks()/MILLIS_FACTOR;
+
+}
+
+void sclockSetOffsetTicks(unsigned long offset) {
+
+    sclock_offset.time = offset;
+
+}
+
+void sclockSetOffsetMillis(unsigned long offset) {
+
+    sclockSetOffsetTicks(offset*MILLIS_FACTOR);
+
+}
+
+unsigned int sclockGetMillisFactor(void) {
+
+    return MILLIS_FACTOR;
 
 }
 
@@ -93,7 +139,7 @@ unsigned long sclockGetTime(void) {
 // =========== Private Functions ==============================================
 
 /**
- * Timer ticks 5 times per microsecond with 8:1 prescale
+ * Timer ticks 625 times per millisecond with 64:1 prescale
  */
 static void sclockSetupPeripheral(void) {
 
@@ -101,10 +147,10 @@ static void sclockSetupPeripheral(void) {
     T8CONvalue =    T8_OFF &
                     T8_IDLE_CON &
                     T8_GATE_OFF &
-                    T8_PS_1_8 &
+                    T8_PS_1_64 &
                     T8_32BIT_MODE_ON &
                     T8_SOURCE_INT;
-    T8PERvalue = 40; // this value doesn't really mean anything here.
+    T8PERvalue = 40;    // this value doesn't really mean anything here.
     OpenTimer8(T8CONvalue, T8PERvalue);
     T8CONbits.TON = 1;
 
@@ -115,5 +161,6 @@ static void sclockReset(void) {
     // do not change the order of the following two lines.
     TMR_MSW = 0;
     TMR_LSW = 0;
+    sclock_offset.time = 0;
 
 }
